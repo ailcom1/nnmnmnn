@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, maximum-scale=1.0">
+    <title>تحويل النقاط</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e2a38;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(30, 42, 56, 0.95);
+            text-align: center;
+        }
+
+        h1 {
+            color: #f1c40f;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .input-field {
+            width: 90%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #f1c40f;
+            font-size: 16px;
+            text-align: center;
+            margin: 15px 0;
+            background-color: #3b4058;
+            color: #ffffff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #00cc99;
+            box-shadow: 0 0 8px rgba(0, 204, 153, 0.5);
+            outline: none;
+        }
+
+        .button, .back-button {
+            width: 90%;
+            padding: 15px 0;
+            font-size: 18px;
+            color: #ffffff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .button:hover, .back-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-3px);
+        }
+
+        .button:active, .back-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تحويل النقاط</h1>
+        <input type="number" class="input-field" id="pointsToConvert" placeholder="أدخل عدد النقاط" required>
+        <input type="text" class="input-field" id="referralCode" placeholder="أدخل رمز الإحالة" required>
+        <button class="button" onclick="convertPoints()">تحويل النقاط</button>
+        <button class="back-button" onclick="window.history.back()">عودة</button>
+    </div>
+
+    <script>
+        function convertPoints() {
+            const points = document.getElementById("pointsToConvert").value;
+            const referralCode = document.getElementById("referralCode").value;
+            const username = localStorage.getItem("currentUser");
+            const userRef = ref(database, 'users/' + username);
+
+            if (referralCode === "") {
+                alert("يرجى إدخال رمز الإحالة.");
+                return;
+            }
+
+            get(userRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const currentPoints = snapshot.val().points || 0;
+
+                    if (points <= currentPoints) {
+                        const newPoints = currentPoints - points;
+                        update(userRef, { points: newPoints }).then(() => {
+                            alert("تم تحويل " + points + " نقطة بنجاح!");
+                            document.getElementById("pointsToConvert").value = ''; // مسح حقل إدخال النقاط
+                            document.getElementById("referralCode").value = '';   // مسح حقل إدخال رمز الإحالة
+                        }).catch((error) => {
+                            console.error("خطأ في تحديث النقاط: ", error);
+                        });
+                    } else {
+                        alert("ليس لديك نقاط كافية!");
+                    }
+                } else {
+                    alert("خطأ في جلب بيانات المستخدم.");
+                }
+            }).catch((error) => {
+                console.error("خطأ في جلب بيانات المستخدم: ", error);
+            });
+        }
+    </script>
+</body>
+</html>

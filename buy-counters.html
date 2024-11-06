@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, maximum-scale=1.0">
+    <title>تحويل النقاط</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e2a38;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e2a38; /* خلفية موحدة */
+        }
+
+        h1 {
+            color: #f1c40f;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-field {
+            width: 80%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #f1c40f;
+            font-size: 16px;
+            text-align: center;
+            margin: 10px 0;
+            background-color: #3b4058;
+            color: #ffffff;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #00cc99;
+            outline: none;
+        }
+
+        .button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #ffffff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تحويل النقاط</h1>
+        <input type="text" class="input-field" id="referralCode" placeholder="رمز الإحالة" required>
+        <input type="number" class="input-field" id="pointsToTransfer" placeholder="عدد النقاط" required>
+        <button class="button" onclick="transferPoints()">تحويل النقاط</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4qeIXomPGC5WIRhG63n2Rfo1mx5vNXVA",
+            authDomain: "ajjad-moayad-new-update.firebaseapp.com",
+            databaseURL: "https://ajjad-moayad-new-update-default-rtdb.firebaseio.com",
+            projectId: "ajjad-moayad-new-update",
+            storageBucket: "ajjad-moayad-new-update.firebasestorage.app",
+            messagingSenderId: "55206297868",
+            appId: "1:55206297868:web:4d8dfd6807765d25c80929",
+            measurementId: "G-JJT3HVNP34"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // دالة لتحويل النقاط
+        window.transferPoints = function() {
+            const username = localStorage.getItem("currentUser");
+            const referralCode = document.getElementById("referralCode").value;
+            const pointsToTransfer = parseInt(document.getElementById("pointsToTransfer").value);
+
+            if (!referralCode || isNaN(pointsToTransfer) || pointsToTransfer <= 0) {
+                alert("يرجى إدخال رمز إحالة صحيح وعدد نقاط صالح للتحويل.");
+                return;
+            }
+
+            const userRef = ref(database, 'users/' + username);
+            const referralUserRef = ref(database, 'users/' + referralCode);
+
+            get(userRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const currentPoints = snapshot.val().points || 0;
+
+                    if (currentPoints >= pointsToTransfer) {
+                        get(referralUserRef).then((referralSnapshot) => {
+                            if (referralSnapshot.exists()) {
+                                const newPoints = (referralSnapshot.val().points || 0) + pointsToTransfer;
+
+                                // تحديث نقاط المستخدم المحول إليه
+                                update(referralUserRef, { points: newPoints }).then(() => {
+                                    // تحديث نقاط المستخدم المحول
+                                    const newCurrentPoints = currentPoints - pointsToTransfer;
+                                    update(userRef, { points: newCurrentPoints }).then(() => {
+                                        alert("تم تحويل النقاط بنجاح!");
+                                    }).catch((error) => {
+                                        console.error("خطأ في تحديث نقاط المستخدم: ", error);
+                                    });
+                                }).catch((error) => {
+                                    console.error("خطأ في تحديث نقاط المحول إليه: ", error);
+                                });
+                            } else {
+                                alert("رمز الإحالة غير صحيح.");
+                            }
+                        }).catch((error) => {
+                            console.error("خطأ في جلب بيانات المستخدم المحول إليه: ", error);
+                        });
+                    } else {
+                        alert("نقاطك غير كافية للتحويل!");
+                    }
+                } else {
+                    alert("هذا المستخدم غير موجود.");
+                }
+            }).catch((error) => {
+                console.error("خطأ في جلب بيانات المستخدم: ", error);
+            });
+        };
+    </script>
+</body>
+</html>
