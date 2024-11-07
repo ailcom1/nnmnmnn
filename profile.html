@@ -176,8 +176,8 @@
                     document.getElementById("emailDisplay").textContent = userData.email;
                     document.getElementById("referralCodeDisplay").textContent = userData.referralCode;
 
-                    // توليد رمز إحالة جديد إذا كان الرمز الحالي يحتوي على أحرف
-                    if (userData.referralCode && isNaN(userData.referralCode)) {
+                    // إذا لم يكن هناك رمز إحالة، توليد رمز جديد
+                    if (!userData.referralCode) {
                         const referralCode = generateReferralCode(11); // توليد رمز مكون من 11 رقم
                         set(userRef, {
                             ...userData,
