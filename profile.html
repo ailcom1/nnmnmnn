@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -139,7 +140,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -174,12 +175,33 @@
                     document.getElementById("usernameDisplay").textContent = userData.username;
                     document.getElementById("emailDisplay").textContent = userData.email;
                     document.getElementById("referralCodeDisplay").textContent = userData.referralCode;
+
+                    // توليد رمز إحالة جديد إذا كان الرمز الحالي يحتوي على أحرف
+                    if (userData.referralCode && isNaN(userData.referralCode)) {
+                        const referralCode = generateReferralCode(11); // توليد رمز مكون من 11 رقم
+                        set(userRef, {
+                            ...userData,
+                            referralCode: referralCode
+                        }).then(() => {
+                            document.getElementById("referralCodeDisplay").textContent = referralCode;
+                        }).catch((error) => {
+                            console.error('خطأ في تحديث رمز الإحالة: ', error);
+                        });
+                    }
                 } else {
                     console.error('المستخدم غير موجود');
                 }
             }).catch((error) => {
                 console.error("خطأ في جلب بيانات المستخدم: ", error);
             });
+        }
+
+        function generateReferralCode(length) {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += Math.floor(Math.random() * 10); // توليد رقم عشوائي من 0 إلى 9
+            }
+            return result; // إرجاع الرمز المكون من 11 رقم
         }
 
         window.uploadProfilePicture = function(event) {
